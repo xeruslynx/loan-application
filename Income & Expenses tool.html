@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income & Expenses Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px; /* Adjusted for 16:9 screen */
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            gap: 20px; /* Space between columns */
+            position: relative; /* For positioning the tiny text */
+        }
+        .left-column, .right-column {
+            flex: 1; /* Equal width for both columns */
+        }
+        h1 {
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between logo and header */
+            margin: 0; /* Remove default margin */
+        }
+        h1 img {
+            height: 40px; /* Adjust logo height to match header */
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f9f9f9;
+        }
+        .total {
+            font-weight: bold;
+            background-color: #f1f1f1;
+        }
+        .verdict {
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .verdict.rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .verdict.approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .verdict.adjustments {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .footer-text {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 10px; /* Approximately 2.5mm */
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Column -->
+        <div class="left-column">
+            <h1>
+                <img src="https://lh3.google.com/u/0/d/1aw3D6BR6k4Z3cx30vUGcV8BWXH0nsKHr=w1910-h937-iv1" alt="Logo">
+                Income & Expenses Tool
+            </h1>
+            <p>THIS TOOL IS DESIGNED TO HELP YOU EVALUATE WHETHER YOUR CURRENT FINANCIAL STATEMENT SUPPORTS YOUR DESIRED LOAN AMOUNT. IT ALSO ENABLES YOU TO VERIFY THAT THE INFORMATION PROVIDED IS REALISTIC AND ACCURATELY REFLECTS YOUR ACTUAL FINANCIAL POSITION.</p>
+            <p><strong>Please note:</strong> This tool does not submit any data to Google Forms. It is intended solely for your personal assessment. Ensure that the details entered here align with the information you will later provide in the official Google Form submission.</p>
+
+            <div class="section loan-details">
+                <h2>Loan Details</h2>
+                <label for="loanAmount">Desired Loan Amount:</label>
+                <input type="text" id="loanAmount" placeholder="Enter loan amount" oninput="formatCurrency(this)">
+
+                <label for="loanTerm">Desired Loan Term (months):</label>
+                <input type="number" id="loanTerm" placeholder="Enter loan term">
+
+                <label for="loanType">Type of Loan:</label>
+                <select id="loanType" onchange="adjustLoanTerm()">
+                    <option value="REGULAR LOAN">Regular Loan</option>
+                    <option value="BACK TO BACK LOAN">Back-to-Back Loan</option>
+                    <option value="REAL ESTATE LOAN">Real Estate Loan</option>
+                    <option value="BUSINESS LOAN">Business Loan</option>
+                    <option value="SPECIAL LOAN">Special Loan</option>
+                </select>
+            </div>
+
+            <div class="section income-statement">
+                <h2>Income Statement</h2>
+                <table>
+                    <tr>
+                        <th>Income Source</th>
+                        <th>Monthly</th>
+                    </tr>
+                    <tr>
+                        <td>Salaries and Wages</td>
+                        <td><input type="text" id="salary" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Income from Business</td>
+                        <td><input type="text" id="businessIncome" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Income from Financial Investments/Dividends</td>
+                        <td><input type="text" id="investments" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Other Income</td>
+                        <td><input type="text" id="otherIncome" oninput="formatCurrency(this)"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <button onclick="calculateVerdict()">See Verdict</button>
+
+            <div id="verdict" class="verdict">
+                <!-- Verdict will be displayed here -->
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+            <div class="section expenditure-statement">
+                <h2>Expenditure Statement</h2>
+                <table>
+                    <tr>
+                        <th>Expenditure</th>
+                        <th>Monthly</th>
+                    </tr>
+                    <tr>
+                        <td>Food Expenses</td>
+                        <td><input type="text" id="food" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>House Rentals</td>
+                        <td><input type="text" id="rent" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Education: Tuition Fees</td>
+                        <td><input type="text" id="tuition" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Education: Miscellaneous Fees</td>
+                        <td><input type="text" id="miscFees" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Education: Books, School Supplies, and Equipment</td>
+                        <td><input type="text" id="books" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Clothing</td>
+                        <td><input type="text" id="clothing" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Medical and Dental Expenses</td>
+                        <td><input type="text" id="medical" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Personal Hygiene Expenses</td>
+                        <td><input type="text" id="hygiene" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Cooking Gas Expenses</td>
+                        <td><input type="text" id="gas" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Transportation Expenses</td>
+                        <td><input type="text" id="transport" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Water Bills</td>
+                        <td><input type="text" id="water" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Electricity Bills</td>
+                        <td><input type="text" id="electricity" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Telephone Bills</td>
+                        <td><input type="text" id="telephone" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Laundry Expenses</td>
+                        <td><input type="text" id="laundry" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Salary of House/Servant</td>
+                        <td><input type="text" id="servant" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Taxes and Licenses</td>
+                        <td><input type="text" id="taxes" oninput="formatCurrency(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>Expenses for Family Gatherings and Outings</td>
+                        <td><input type="text" id="outings" oninput="formatCurrency(this)"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tiny Text at the Bottom -->
+        <div class="footer-text">
+            United Resources Credit Cooperative
+        </div>
+    </div>
+
+    <script>
+        // Function to format currency with commas
+        function formatCurrency(input) {
+            // Remove non-numeric characters
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value === '') {
+                input.value = '';
+            } else {
+                // Add commas as thousand separators
+                input.value = parseFloat(value).toLocaleString('en-US');
+            }
+        }
+
+        // Function to parse currency values (remove commas)
+        function parseCurrency(value) {
+            return parseFloat(value.replace(/,/g, '')) || 0;
+        }
+
+        // Function to adjust loan term based on loan type
+        function adjustLoanTerm() {
+            const loanType = document.getElementById("loanType").value;
+            const loanTermInput = document.getElementById("loanTerm");
+
+            let minLoanTerm, maxLoanTerm, fixedLoanTerm;
+
+            switch (loanType) {
+                case "BACK TO BACK LOAN":
+                    fixedLoanTerm = 12; // Fixed at 12 months (1 year)
+                    break;
+                case "REAL ESTATE LOAN":
+                    minLoanTerm = 12;  // 1 year
+                    maxLoanTerm = 180; // 15 years
+                    break;
+                case "BUSINESS LOAN":
+                    minLoanTerm = 1;    // 1 month
+                    maxLoanTerm = 60;   // 5 years
+                    break;
+                case "REGULAR LOAN":
+                    minLoanTerm = 1;    // 1 month
+                    maxLoanTerm = 60;   // 5 years
+                    break;
+                case "SPECIAL LOAN":
+                    fixedLoanTerm = 60; // Fixed at 60 months (5 years)
+                    break;
+                default:
+                    alert("Invalid loan type. Please check your selection.");
+                    return;
+            }
+
+            // Adjust loan term
+            if (fixedLoanTerm !== undefined) {
+                loanTermInput.value = fixedLoanTerm;
+            } else {
+                let loanTerm = parseInt(loanTermInput.value);
+                if (loanTerm < minLoanTerm) {
+                    loanTermInput.value = minLoanTerm;
+                } else if (loanTerm > maxLoanTerm) {
+                    loanTermInput.value = maxLoanTerm;
+                }
+            }
+        }
+
+        // Function to calculate verdict
+        function calculateVerdict() {
+            // Get loan details
+            const loanAmount = parseCurrency(document.getElementById("loanAmount").value);
+            const loanTerm = parseInt(document.getElementById("loanTerm").value);
+            const loanType = document.getElementById("loanType").value;
+
+            // Get income values
+            const salary = parseCurrency(document.getElementById("salary").value);
+            const businessIncome = parseCurrency(document.getElementById("businessIncome").value);
+            const investments = parseCurrency(document.getElementById("investments").value);
+            const otherIncome = parseCurrency(document.getElementById("otherIncome").value);
+
+            // Get expenditure values
+            const food = parseCurrency(document.getElementById("food").value);
+            const rent = parseCurrency(document.getElementById("rent").value);
+            const tuition = parseCurrency(document.getElementById("tuition").value);
+            const miscFees = parseCurrency(document.getElementById("miscFees").value);
+            const books = parseCurrency(document.getElementById("books").value);
+            const clothing = parseCurrency(document.getElementById("clothing").value);
+            const medical = parseCurrency(document.getElementById("medical").value);
+            const hygiene = parseCurrency(document.getElementById("hygiene").value);
+            const gas = parseCurrency(document.getElementById("gas").value);
+            const transport = parseCurrency(document.getElementById("transport").value);
+            const water = parseCurrency(document.getElementById("water").value);
+            const electricity = parseCurrency(document.getElementById("electricity").value);
+            const telephone = parseCurrency(document.getElementById("telephone").value);
+            const laundry = parseCurrency(document.getElementById("laundry").value);
+            const servant = parseCurrency(document.getElementById("servant").value);
+            const taxes = parseCurrency(document.getElementById("taxes").value);
+            const outings = parseCurrency(document.getElementById("outings").value);
+
+            // Validate required fields
+            if (loanAmount === 0 || loanTerm === 0 || (salary + businessIncome + investments + otherIncome) === 0) {
+                const verdictDiv = document.getElementById("verdict");
+                verdictDiv.textContent = "Please check the values";
+                verdictDiv.className = "verdict rejected";
+                return;
+            }
+
+            // Calculate total income and expenditure
+            const totalIncome = salary + businessIncome + investments + otherIncome;
+            const totalExpenditure = food + rent + tuition + miscFees + books + clothing + medical + hygiene + gas + transport + water + electricity + telephone + laundry + servant + taxes + outings;
+
+            // Calculate Net Income After Expenses (NIAE)
+            const NIAE = totalIncome - totalExpenditure;
+
+            // Calculate Debt-to-Income Ratio (DTI)
+            const MLA = calculateMLA(loanAmount, loanTerm, loanType);
+            const DTI = NIAE > 0 ? (MLA / NIAE) * 100 : 100; // Handle zero or negative NIAE
+
+            // Determine verdict
+            let verdict, className;
+            if (loanAmount < NIAE) {
+                verdict = "Rejected - Loan Not Necessary";
+                className = "rejected";
+            } else if (DTI > 50) {
+                verdict = `Rejected - High Risk: Debt-to-Income Ratio (DTI) is ${DTI.toFixed(2)}%, which exceeds the 50% threshold.`;
+                className = "rejected";
+            } else if (DTI <= 40) {
+                verdict = `Approved: Debt-to-Income Ratio (DTI) is ${DTI.toFixed(2)}%, within acceptable limits.`;
+                className = "approved";
+            } else {
+                verdict = `Approved with Adjustments: Debt-to-Income Ratio (DTI) is ${DTI.toFixed(2)}%. Some adjustments may be required.`;
+                className = "adjustments";
+            }
+
+            // Display verdict
+            const verdictDiv = document.getElementById("verdict");
+            verdictDiv.textContent = verdict;
+            verdictDiv.className = `verdict ${className}`;
+        }
+
+        // Function to calculate Monthly Loan Amortization (MLA)
+        function calculateMLA(loanAmount, loanTerm, loanType) {
+            let interestRate;
+            switch (loanType) {
+                case "BACK TO BACK LOAN":
+                    interestRate = 0.75 / 100;
+                    break;
+                case "REAL ESTATE LOAN":
+                    if (loanTerm <= 60) interestRate = 8 / 100;
+                    else if (loanTerm <= 120) interestRate = 9 / 100;
+                    else interestRate = 10 / 100;
+                    break;
+                case "BUSINESS LOAN":
+                    interestRate = 1 / 100;
+                    break;
+                case "REGULAR LOAN":
+                    interestRate = 1.2 / 100;
+                    break;
+                case "SPECIAL LOAN":
+                    interestRate = 6 / 100;
+                    break;
+                default:
+                    interestRate = 0;
+            }
+
+            if (loanType === "SPECIAL LOAN") {
+                // Flat Interest Calculation for Special Loan
+                return (loanAmount * (1 + interestRate * (loanTerm / 12))) / loanTerm;
+            } else {
+                // Diminishing Interest Formula
+                const monthlyInterest = interestRate / 12;
+                const denominator = 1 - Math.pow(1 + monthlyInterest, -loanTerm);
+                return denominator === 0 ? loanAmount / loanTerm : (loanAmount * monthlyInterest) / denominator;
+            }
+        }
+    </script>
+</body>
+</html>
